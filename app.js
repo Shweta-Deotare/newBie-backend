@@ -1,40 +1,33 @@
-const express = require('express');
-
-const dotenv = require('dotenv').config();
-
-const app = express();
-
-const port = process.env.PORT || 5000;
-
-const userRouter = require('./routes/userRouter');
-
+const app = require('express')();
 const bodyParser = require('body-parser');
-
-const cors = require('cors');
-
-
-
-app.listen(port, ()=>{
-    console.log(`Server is running on ${port}`);
-})
+const db = require('./gateway/databaseGateway');
 
 app.use(bodyParser.json());
 
+// Enable CORS
+app.use(function (req, res, next) {
+ res.header("Access-Control-Allow-Origin", "*");
+ res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT,DELETE");
+ res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+ next();
+});
 
-const db = require('./model/index.js');
-db.testConnection();
+try {
+ db.testConnection();
+ console.log('DB connection established...');
+} catch (error) {
+ console.log('failed DB connection...');
+}
 
-app.use(cors({
-    origin:"*"
-}));
+app.use('/user', require('./route/account'));
 
-//routes
-app.use("/", userRouter.allUsers);
-app.use("/", userRouter.userLogin);
-app.use("/", userRouter.registerUser);
+app.get('/', (req, res) => {
+ res.send('hello');
+})
+
+const PORT = process.env.port || 3000;
 
 
-//dummy "/test" route
-app.get("/test", (req, res)=>{
-    res.json("This is an express app.");
+app.listen(PORT, () => {
+ console.log(`Server is running on ${PORT}`);
 })
